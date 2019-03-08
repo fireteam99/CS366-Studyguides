@@ -248,7 +248,6 @@ Example: We have the table User
 **Find the pairs of names of users that are the same age.**  
 σ<sub>n1 < n2</sub>(ρ<sub>U1(n1, i1, age)</sub>User ⋈ ρ<sub>U2(n2, i2, age)</sub>User)
 
-
 ### Expression Trees
 You can illustrate relational algebra expressions by creating expression trees which show the steps taken for a query.
 ![expr-tree](http://i.imgur.com/3ycZB83.jpg)
@@ -259,3 +258,220 @@ You can illustrate relational algebra expressions by creating expression trees w
 
 ## SQL
 
+### SELECT, FROM
+The `select` keyword allows you to choose columns from a table. The `from` keyword allows you to choose a table to select from.
+
+```sql
+SELECT column1, column2, ... 
+FROM table_name;
+```
+
+### WHERE
+The `where` keyword allows you to specify a condition to filter the rows returned.
+
+```sql
+SELECT column1, column2, ...
+FROM table_name
+WHERE condition;
+```
+### AND, OR, NOT
+The `and`, `or`, and `not` keywords supplement the `where` keyword to allow multiple conditionals. They can be combined together.
+
+```sql
+SELECT column1, column2, ...
+FROM table_name
+WHERE condition1 AND condition2 AND condition3 ...;
+
+SELECT column1, column2, ...
+FROM table_name
+WHERE condition1 OR condition2 OR condition3 ...;
+
+SELECT column1, column2, ...
+FROM table_name
+WHERE NOT condition;
+```
+
+### ORDER BY
+The `order by` keyword allows you to you to order the tuples returned from a query. Defaults to ascending. It is possible to specify multiple columns so they are used to split ties in ordering.
+
+```sql
+SELECT column1, column2, ...
+FROM table_name
+ORDER BY column1, column2, ... ASC|DESC;
+```
+
+### INSERT INTO
+Allow you to insert records into a table.
+
+```sql
+INSERT INTO table_name (column1, column2, column3, ...)
+VALUES (value1, value2, value3, ...);
+```
+
+### UPDATE
+Allow you to update records in a table.
+
+```sql
+UPDATE table_name
+SET column1 = value1, column2 = value2, ...
+WHERE condition;
+```
+
+### DELETE
+Allow you to delete existing records from a table.
+
+```sql
+DELETE FROM table_name WHERE condition;
+```
+
+### INNER JOIN
+Also called equal, or natural joins, it selects tuples with matching values in both tables.
+
+```sql
+SELECT column_name(s)
+FROM table1
+INNER JOIN table2
+ON table1.column_name = table2.column_name;
+```
+
+### LEFT JOIN
+A type of outer join, it returns all of the records from the left table and only the matched records from the right. As a result, some attributes from the left table may be null.
+
+```sql
+SELECT column_name(s)
+FROM table1
+LEFT JOIN table2
+ON table1.column_name = table2.column_name;
+```
+
+### RIGHT JOIN
+Also a type of outer join, it returns all of the records from the right table and only matched records from the left. Some attributes from the right table may be null.
+
+```sql
+SELECT column_name(s)
+FROM table1
+RIGHT JOIN table2
+ON table1.column_name = table2.column_name;
+```
+
+### FULL JOIN
+Another type of out join, the full join combines both the left and right join which means all values are returned. There may be null attributes on both sides.
+
+```sql
+SELECT column_name(s)
+FROM table1
+FULL OUTER JOIN table2
+ON table1.column_name = table2.column_name;
+```
+### Constraints
+#### NOT NULL
+This constraint means an attribute cannot be left null.
+
+```sql
+CREATE TABLE Persons (
+    ID int NOT NULL,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255) NOT NULL,
+    Age int
+);
+```
+#### UNIQUE
+This constraint means an attribute must be unique.
+
+```sql
+CREATE TABLE Persons (
+    ID int NOT NULL UNIQUE,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255),
+    Age int
+);
+```
+
+#### Primary Key
+An attribute designated primary key must both be not null and unique. It allows a row to be specifically identified.
+
+```sql
+CREATE TABLE Persons (
+    ID int NOT NULL PRIMARY KEY,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255),
+    Age int
+);
+```
+
+##### Composite
+A composite primary key means that several columns are used in conjunction to uniquely identify an entity.
+
+```sql
+CREATE TABLE Score_Board (
+    ContestID int,
+    PlayerID int,
+    Score int,
+    Date date,
+    PRIMARY KEY (ContestID, PlayerID, Score, Date),
+    FOREIGN KEY (ContestID) REFERENCES Contest (id),
+    FOREIGN KEY (PlayerID) REFERENCES Player (id)
+);
+```
+
+#### Foreign Key
+Allows you to reference another table's primary key.
+
+```sql
+CREATE TABLE Orders (
+    OrderID int NOT NULL PRIMARY KEY,
+    OrderNumber int NOT NULL,
+    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+);
+```
+```sql
+CREATE TABLE Score_Board (
+    ContestID int,
+    PlayerID int,
+    Score int,
+    Date date,
+    PRIMARY KEY (ContestID, PlayerID, Score, Date),
+    FOREIGN KEY (ContestID) REFERENCES Contest (id),
+    FOREIGN KEY (PlayerID) REFERENCES Player (id)
+);
+```
+##### Composite
+It's posible to have a composite foreign key.
+
+```sql
+CREATE TABLE Viewer (
+	ID int PRIMARY KEY,
+	ContestID int,
+   	PlayerID int,
+   	Score int,
+   	Date date,
+   	Viewers int,
+   	FOREIGN KEY (ContestID, PlayerID, Score, Date) 
+   	REFERENCES Score_Board (ContestID, PlayerID, Score, Date)
+);
+```
+#### On Delete, On Update
+Typically, when deleting an entry that has a primary key that is being referenced by a child entry, there will be an referential integerty violation.
+##### Restrict
+The default response, the dbms will issue a warning and execution will stop.
+##### Cascade
+If the parent entry is updated or deleted, the children entry will also be updated or deleted.
+##### Set Null
+Will set the foreign key attribute in the child that references the parent entry to null.
+
+```sql
+CREATE TABLE BRDG_TBL (
+	pk int PRIMARY KEY,
+	fk1 int,
+	fk2 int,
+	fk3 int,
+	FOREIGN KEY (fk1) REFERENCES TBL1(pk1) ON DELETE RESTRICT ON UPDATE RESTRICT,
+	FOREIGN KEY (fk2) REFERENCES TBL2(pk2) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (fk3) REFERENCES TBL3(pk3) ON DELETE SET NULL ON UPDATE SET NULL
+);
+```
+
+## ERD To Schema
+
+### Normalization
+### Reification
