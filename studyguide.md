@@ -549,13 +549,13 @@ Normalization refers to the practice of structuring a rdd so that it reduces dat
 #### Data Anomalies
 When a table has too many columns that are non-essential, there runs the risk of many of them being null which leads to problems.
 ##### Insert
-![daex1](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Insert-Anomaly.png)
+![daex1](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Insert-Anomaly.png)  
 In this situation we can't capture any data until we know the EmployeeID because it is the primary key.
 ##### Update
-![daex2](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Update-Anomaly.png)
+![daex2](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Update-Anomaly.png)  
 There is redundant information being stored in the office number column. If on update they are not all changed exactly there will be an update anomoly.
 ##### Deletion
-![daex3](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Deletion-Anomaly.png)
+![daex3](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Deletion-Anomaly.png)  
 If we delete employee John Hunt, we will lose all information related to him, in our case the New York office. This is probably an unwanted consequence.
 
 **Referenced from: [https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/](https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/)**
