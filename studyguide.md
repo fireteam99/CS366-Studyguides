@@ -1,4 +1,5 @@
 # CS336 (DB) Studyguide
+**Disclaimer: I do not own any of the images used in this studyguide, all credit goes to the original creators.**
 ## Entity Relationships
 ### One to One
 Also denoted 1:1, means that one object is related to at most one other object. Think of it as a coupling. Example: spouse - you can either have zero or one spouse.
@@ -300,6 +301,38 @@ FROM table_name
 ORDER BY column1, column2, ... ASC|DESC;
 ```
 
+### IN
+In allows you to specify multiple values for a `where` statement.
+
+```sql
+SELECT column_name(s)
+FROM table_name
+WHERE column_name IN (value1, value2, ...);
+```
+
+### GROUP BY
+The group by operator allows you to group identitcal data from a column into a single one and then do an operation on the other non grouped columns, usually aggregate functions.
+
+```sql
+SELECT column1, column2
+FROM table_name
+WHERE [ conditions ]
+GROUP BY column1, column2
+ORDER BY column1, column2
+```
+
+### HAVING
+Basically a `where` keyword but to use with aggregate functions.
+
+```sql
+SELECT column_name(s)
+FROM table_name
+WHERE condition
+GROUP BY column_name(s)
+HAVING condition
+ORDER BY column_name(s);
+```
+
 ### INSERT INTO
 Allow you to insert records into a table.
 
@@ -472,6 +505,57 @@ CREATE TABLE BRDG_TBL (
 ```
 
 ## ERD To Schema
-
-### Normalization
+Our goal is to change the drawn relationships from a diagram into actual tables with attributes in SQL.
 ### Reification
+Reification is the way we achieve the goal of going from ERD to Schema. A good example would be the implentation of inheritance.
+
+![inhr](https://thuruinhttp.files.wordpress.com/2011/08/image4.png)  
+Given the following diagram, we implement it several ways.
+
+```sql
+-- Denormalized Approach
+CREATE TABLE Person (
+	id int PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	age int NOT NULL,
+	type enum(Student, Lecturer) NOT NULL,
+	grade int,
+	salary numeric
+);
+
+-- Normalized Approach
+CREATE TABLE Person (
+	id int PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	age int NOT NULL,
+	type enum(Student, Lecturer) NOT NULL,
+);
+CREATE TABLE Student (
+	sid int PRIMARY KEY,
+	pid int,
+	grade int,
+	FOREIGN KEY pid REFERENCES Person(id)
+);
+CREATE TABLE Lecturer (
+	lid int PRIMARY KEY,
+	pid int,
+	salary numeric,
+	FOREIGN KEY pid REFERENCES Person(id)
+);
+``` 
+Both approaches have their own psotivies and negatives but satisfies the goal of creating a concrete implementation.
+### Normalization
+Normalization refers to the practice of structuring a rdd so that it reduces data redundancy and improves data integrity.
+#### Data Anomalies
+When a table has too many columns that are non-essential, there runs the risk of many of them being null which leads to problems.
+##### Insert
+![daex1](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Insert-Anomaly.png)
+In this situation we can't capture any data until we know the EmployeeID because it is the primary key.
+##### Update
+![daex2](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Update-Anomaly.png)
+There is redundant information being stored in the office number column. If on update they are not all changed exactly there will be an update anomoly.
+##### Deletion
+![daex3](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Deletion-Anomaly.png)
+If we delete employee John Hunt, we will lose all information related to him, in our case the New York office. This is probably an unwanted consequence.
+
+**Referenced from: [https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/](https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/)**
