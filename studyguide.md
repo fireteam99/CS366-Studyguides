@@ -48,12 +48,13 @@ Cover entities means an object(entry) can belong to multiple subclasses, example
 ## Datalog
 Datalog is a subset of prolog that can be used to simulate a database management system functions such as querying information.
 
-###Syntax
+### Syntax
 AND denoted as `,`  
 OR denoted as `;`  
 NOT denoted as `not` or `\`
 
-Facts denoted `<factname>(<item1>,<item2>,...).` can represent entries in a database table.
+### Facts
+Denoted `<factname>(<item1>,<item2>,...).` can represent entries in a database table. Note facts always end with a period.
 
 ```prolog
 likes(cat, fish).
@@ -64,16 +65,17 @@ likes(cat, broccoli)?
 blue(sky).
 blue(sky)?
 > true
-blue(ground?
+blue(ground)?
 > false
 ```
 
-Rules denoted `<rulename> :- <fact1>, <fact2>...` allow you to construct more facts.
+### Rules
+Denoted `<rulename> :- <fact1>, <fact2>...` allow you to construct more facts from existing facts. Rules also end with a period. 
 
 ```prolog
-likes(ryan, brit)
-likes(brit, ryan)
-likes(dan, josh)
+likes(ryan, brit).
+likes(brit, ryan).
+likes(dan, josh).
 
 dating(X, Y) :-
 	likes(X, Y),
@@ -89,6 +91,28 @@ dating(dan, josh)?
 > false
 ```
 Here we note that for two people to be dating, they must both like one another. On the otherhand, friendship only requires one person to like the other.
+
+
+### Atom
+An atom is a predicate aka a relation name with variables or constants as arguments. `<perdicate name> :- (<arg1>, <arg2>).` `partOf :- (wheel, car).`
+
+**Convention**: Predicates are capitalized and variables are lower-cased.
+
+### Interpreting Rules
+* A variable that appears in the head is considered *distinguised*; otherwise it is *nondistinguished*.
+* A rule is considered true if there exists values of nondistinguished variables that make the subgoals of the body true.
+
+Lets say we have the following query:
+
+```prolog
+isGrandmaster(X) :- 
+	isMaster(X),
+	inDivision(X, 1),
+	inSeason(X, fall),
+	hasHighELO(X)
+```
+Interpretation: A player X is a grandmaster only if they are currently - ranked master, playing in division 1, playing in the fall season, and has a high ELO. 
+
 ## Relational Algebra
 ### Selection
 Represented by sigma `σ`. Allows you to choose certain columns in a table with an condition to filter the rows extracted. 
@@ -543,19 +567,172 @@ CREATE TABLE Lecturer (
 	FOREIGN KEY pid REFERENCES Person(id)
 );
 ``` 
-Both approaches have their own psotivies and negatives but satisfies the goal of creating a concrete implementation.
-### Normalization
+Both approaches have their own positives and negatives but satisfies the goal of creating a concrete implementation.
+
+## Functional Dependency Theory
+
+## Normalization
 Normalization refers to the practice of structuring a rdd so that it reduces data redundancy and improves data integrity.
-#### Data Anomalies
+### Data Anomalies
 When a table has too many columns that are non-essential, there runs the risk of many of them being null which leads to problems.
-##### Insert
+#### Insert
 ![daex1](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Insert-Anomaly.png)  
 In this situation we can't capture any data until we know the EmployeeID because it is the primary key.
-##### Update
+#### Update
 ![daex2](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Update-Anomaly.png)  
 There is redundant information being stored in the office number column. If on update they are not all changed exactly there will be an update anomoly.
-##### Deletion
+#### Deletion
 ![daex3](https://277dfx2bm2883ohl6u2g3l59-wpengine.netdna-ssl.com/wp-content/uploads/2014/06/Intro-Deletion-Anomaly.png)  
 If we delete employee John Hunt, we will lose all information related to him, in our case the New York office. This is probably an unwanted consequence.
 
 **Referenced from: [https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/](https://www.essentialsql.com/get-ready-to-learn-sql-database-normalization-explained-in-simple-english/)**
+
+### Denormalized
+Denormalized data has no restrictions thus making it very ineffecient.
+
+| name | addr1                | addr2             | favbrand          | brandhq                          | rating  | satisfaction          |
+|------|----------------------|-------------------|-------------------|----------------------------------|---------|-----------------------|
+| John | 12 Houston Dr, Texas | 139 Spring St, NY | Apple, HP, Lenovo | Cupertino, Palo Alto, Quarry Bay | 4, 5, 3 | happy, happy, neutral |
+| Jane | 5 York Ave, Boston   | null              | Samsung, Dell     | Seoul, Round Rock                | 4, 5    | happy, happy          |
+| John | 5 York Ave, Boston   | null              | Apple, Samsung    | Cupertino, Seoul                 | 3, 5    | neutral, happy        |
+
+#### Problems
+1. There is no way to uniquely identify a row.
+2. If a customer has less than two addresses, `addr2` is left empty, if a customer a third address, there is no where to insert it.
+3. The rows `favbrand`, `brandhq`, `rating`, and `satisfaction` all have multiple values.
+
+### First Normal Form (1NF)
+#### Rules
+1. Single valued (atomic) values for all attributes/columns.
+2. Attribute domans cannot change - values stored must be the same type.
+3. Unique name for attributes/columns.
+3. No repeating groups - eg: (addr1, addr2)
+4. The order you store your data doesn't matter.
+5. Rows are uniquely identified by a primary key.
+
+#### Converting to 1NF
+1. We can't have repeating groups so `addr1` and `addr2` is changed into a single attribute `addr`.
+2. We can't have multiple values in `addr`, `favbrand`, `brandhq`, `rating`, nor `satisfaction` so we'll have to split our current entries so a row only has one value in each attribute.
+3. We need to uniquely identify our rows so `id`, `name`, `addr`, `favbrand`, become a composite primary key.
+
+| id | name | addr                 | favbrand | brandhq    | rating | satisfaction |
+|----|------|----------------------|----------|------------|--------|--------------|
+| 1  | John | 12 Houston Dr, Texas | Apple    | Cupertino  | 4      | happy        |
+| 1  | John | 12 Houston Dr, Texas | HP       | Palo Alto  | 5      | happy        |
+| 1  | John | 12 Houston Dr, Texas | Lenovo   | Quarry Bay | 3      | neutral      |
+| 1  | John | 139 Spring St, NY    | Apple    | Cupertino  | 4      | happy        |
+| 1  | John | 139 Spring St, NY    | HP       | Palo Alto  | 5      | happy        |
+| 1  | John | 139 Spring St, NY    | Lenovo   | Quarry Bay | 3      | neutral      |
+| 2  | Jane | 5 York Ave, Boston   | Samsung  | Seoul      | 4      | happy        |
+| 2  | Jane | 5 York Ave, Boston   | Dell     | Round Rock | 5      | happy        |
+| 3  | John | 5 York Ave, Boston   | Apple    | Cupertino  | 3      | neutral      |
+| 3  | John | 5 York Ave, Boston   | Samsung  | Seoul      | 5      | happy        |
+##### Problems
+1. There is alot of redundancy in the rows, `id`, `name`, `addr`, `favbrand`.
+2. It is recommended but not necessary to decompose `name`, `addr`, and `(favbrand, brandhq, rating)` into their own tables.
+
+**Name**
+
+| id | name |
+|----|------|
+| 1  | John |
+| 2  | Jane |
+| 3  | John |
+
+**Address**
+
+| id | address              |
+|----|----------------------|
+| 1  | 12 Houston Dr, Texas |
+| 1  | 139 Spring St, NY    |
+| 2  | 5 York Ave, Boston   |
+| 3  | 5 York Ave, Boston   |
+
+**Favorite-Brand**
+
+| id | favbrand | brandhq    | rating | satisfaction |
+|----|----------|------------|--------|--------------|
+| 1  | Apple    | Cupertino  | 4      | happy        |
+| 1  | HP       | Palo Alto  | 5      | happy        |
+| 1  | Lenovo   | Quarry Bay | 3      | neutral      |
+| 2  | Samsung  | Seoul      | 4      | happy        |
+| 2  | Dell     | Round Rock | 5      | happy        |
+| 3  | Apple    | Cupertino  | 3      | neutral      |
+| 3  | Samsung  | Seoul      | 5      | happy        |
+
+##### Problems
+1. There is still a lot of redundancy in the `Favorite-Brand` table.
+
+### Second Normal Form (2NF)
+#### Rules
+1. Table must be in 1NF
+2. No **partial dependences** - an attribute that is not a key and is dependent on a single key as opposed to the entire candidate key. Often abstractly depicted as `A` → `B` where `A` is a key attribute and `B` a non-key attribute.
+
+#### Converting to 2NF
+1. In the tables `Name` and `Address`, the fields `name` and `address` respectively form a candidate key with the `id` field which means both tables are 2NF compliant.
+2. Notice `id` and `favbrand` form a candidate key in the `Favorite-Brand` table.
+3. Notice `brandhq` depends on `favbrand` (a key) but not `id` (also a key), which is a violation of 2NF. On the other hand, `rating`, and `satisfaction`, depend on both `id`, and `favbrand`, thus aren't violations.
+4. Therefore, we move attribute `brandhq` to a new table, called `Brand`.
+
+**Favorite-Brand**
+
+| id | favbrand | rating | satisfaction |
+|----|----------|--------|--------------|
+| 1  | Apple    | 4      | happy        |
+| 1  | HP       | 5      | happy        |
+| 1  | Lenovo   | 3      | neutral      |
+| 2  | Samsung  | 4      | happy        |
+| 2  | Dell     | 5      | happy        |
+| 3  | Apple    | 3      | neutral      |
+| 3  | Samsung  | 5      | happy        |
+
+**Brand**
+
+| name    | hq         |
+|---------|------------|
+| Apple   | Cupertino  |
+| HP      | Palo Alto  |
+| Lenovo  | Quarry Bay |
+| Samsung | Seoul      |
+| Dell    | Round Rock |
+
+#### Problems
+1. There is still a little bit of redundancy present in the `Favorite-Brand` table.
+
+### Third Normal Form (3NF)
+#### Rules
+1. Table must be in 2NF
+2. There cannot be any **transitive dependencies** - an attribute that depends on an non-key attribute which in turn depends on a key attribute. A common abstract representation would be `A` → `B` → `C` where `B` → `A` is false. In this case, `A` is a key, and `B` and `C` are not.
+
+#### Converting to 3NF
+1. Notice that `satisfaction` is determined by `rating` which is in turn determined by `id` and `favbrand`.
+2. This makes `satisfaction` a transitive dependency which violates 3NF.
+3. Therefore, move `satisfaction` to it's own table `Satisfaction`.
+
+**Favorite-Brand**
+
+| id | favbrand | brandhq    | rating |
+|----|----------|------------|--------|
+| 1  | Apple    | Cupertino  | 4      |
+| 1  | HP       | Palo Alto  | 5      |
+| 1  | Lenovo   | Quarry Bay | 3      |
+| 2  | Samsung  | Seoul      | 4      |
+| 2  | Dell     | Round Rock | 5      |
+| 3  | Apple    | Cupertino  | 3      |
+| 3  | Samsung  | Seoul      | 5      |
+
+**Satisfaction**
+
+| rating | satisfaction |
+|--------|--------------|
+| 1      | sad          |
+| 2      | sad          |
+| 3      | neutral      |
+| 4      | happy        |
+| 5      | happy        |
+
+### Boyce–Codd Normal Form (BCNF or 3.5NF)
+#### Rules
+1. Table must be in 3NF
+2. For any dependency `A` → `B`, `A` should be a super key.
+3. A non-prime attribute cannot derive a prime attribute.
