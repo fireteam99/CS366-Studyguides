@@ -570,6 +570,20 @@ CREATE TABLE Lecturer (
 Both approaches have their own positives and negatives but satisfies the goal of creating a concrete implementation.
 
 ## Functional Dependency Theory
+### Super Key
+Set of attributes that can be used to determine a tuple uniquely.
+### Candidate Key
+The minimum set of attributes needed to uniquely identify a tuple. Note a candidate key is always a super key but not vice versa.
+### Prime Attribute
+A prime attribute is any attribute that is part of a candidate key. A non-prime attribute is any attribute that doesn't appear in a candidate key.
+
+### Foreign Dependencies Overview
+
+### Closure
+
+### Computing Closures of Attributes
+
+### Finding Keys
 
 ## Normalization
 Normalization refers to the practice of structuring a rdd so that it reduces data redundancy and improves data integrity.
@@ -731,8 +745,56 @@ Denormalized data has no restrictions thus making it very ineffecient.
 | 4      | happy        |
 | 5      | happy        |
 
+
+#### Abstract Example
+We are given a table represented as functional dependencies where `A` and `B` form the candidate key.
+![1nf](images/1NF.png) 
+
+Notice that `G` is only determined by `A` and `H` is only determined by `B` rather than the entire candidate key. This represents a 2NF violation so we decompose them into seperate tables.
+![2nf](images/2NF.png) 
+
+Here we can see `F` is determined by `C` and `E` is determined by `D`. Since `C` and `D` are non-keys, but themselves are determined by `A` and `B`, we have identified two transitive dependences. Thus we must further decompose the table.
+![3nf](images/3NF.png) 
+Our table is now in third normal form.
+
 ### Boyce–Codd Normal Form (BCNF or 3.5NF)
 #### Rules
 1. Table must be in 3NF
-2. For any dependency `A` → `B`, `A` should be a super key.
-3. A non-prime attribute cannot derive a prime attribute.
+2. No trivial dependencies - for any dependency `A` → `B`, `A` should be a super key. In other words, a non-prime attribute cannot derive a prime attribute.
+
+#### Non-BCNF Compliant Table
+In our table, a professor is only allowed to teach a single subject. A student is taught by multiple professors.
+
+| student_id | subject | professor |
+|------------|---------|-----------|
+| 101        | Java    | P. Java   |
+| 101        | C++     | P. Cpp    |
+| 102        | Java    | P. Coffee |
+| 103        | C#      | P. Chash  |
+| 104        | Java    | P. Java   |
+
+#### Problems
+We can see that `student_id` and `subject` form the candidate key. Since a professor is only allowed to teach one subject, we can say `professor` determines `subject`. However, the `professor` attribute is not a superkey (determine all other keys), so we have a BCNF violation. Without normalization, we would have redundancy in the `professor` attribute.
+
+#### Resolution
+To fix it we split our table into one containing `student_id` and `subject` and another containing `subject` and `professor`.
+
+**Student**
+
+| student_id | professor |
+|------------|-----------|
+| 101        | P. Java   |
+| 101        | P. Cpp    |
+| 102        | P. Coffee |
+| 103        | P. Chash  |
+| 104        | P. Java   |
+
+**Professor**
+
+| professor | subject |
+|-----------|---------|
+| P. Java   | Java    |
+| P. Cpp    | C++     |
+| P. Coffee | Java    |
+| P. Chash  | C#      |
+
