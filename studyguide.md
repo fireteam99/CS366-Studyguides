@@ -1035,4 +1035,59 @@ WHERE country = "UK";
 * A **Data Mark** is a subset of information from a data warehouse
 
 ### Apriori Algorithm
-Start out with number of 
+The Apriori Algorithm allows you to determine what items tend to be purchased together.
+
+#### Example
+We are given data detailing what items were bought in several transactions. We want to find all the rules with a minimum suport of 50%. Since there are four transactions, item(s) must appear atleast two times to pass.
+
+| visit | items   |
+|-------|---------|
+| 1     | 1,3,4   |
+| 2     | 2,3,5   |
+| 3     | 1,2,3,5 |
+| 4     | 2,4     |
+
+We begin with a set of each item by itself.
+
+| itemset | support |
+|---------|---------|
+| {1}     | 2       |
+| {2}     | 3       |
+| {3}     | 3       |
+| {4}     | 2       |
+| {5}     | 2       |
+
+Every item passes. Next we find the combinations of two items.
+
+| itemset | support |
+|---------|---------|
+| {1, 2}  | 1       |
+| {1, 3}  | 2       |
+| {1, 4}  | 1       |
+| {1, 5}  | 1       |
+| {2, 3}  | 2       |
+| {2, 4}  | 1       |
+| {2, 5}  | 2       |
+| {3, 4}  | 1       |
+| {3, 5}  | 2       |
+| {4, 5}  | 0       |
+
+Only {1, 3}, {2, 3}, {2, 5}, {3, 5} survive to the next round. This means only items 1, 2, 3, and 5 will exist in the next item sets.
+
+| itemset   | support |
+|-----------|---------|
+| {1, 3, 2} | 1       |
+| {1, 3, 5} | 1       |
+| {2, 3, 5} | 2       |
+| {1, 2, 5} | 1       |
+
+The only rule that makes it is {1, 3, 2}.
+
+#### Rule Measures: Support and Confidence
+Find all the rules X & Y —> Z
+
+* support, s, is probability that a transaction contains {X, Y, Z}: calculated by `(#times {X, Y, Z} appears) / (#transactions)`
+ * based on the previous example, {1, 3, 2} has a support s = 2/4 = .5 = 50%
+* confidence, c, is conditional probability that a transaction having {X, Y} also contains Z: calclated by `(#times {X, Y, Z} appears) / (#times {X, Y} appears)`
+ * based on previous example, {1, 3, 2} has a confidence c = 2/2 = 100%
+
