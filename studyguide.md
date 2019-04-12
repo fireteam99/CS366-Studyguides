@@ -392,7 +392,7 @@ ON table1.column_name = table2.column_name;
 ```
 
 ### LEFT JOIN
-A type of outer join, it returns all of the records from the left table and only the matched records from the right. As a result, some attributes from the left table may be null.
+A type of outer join, it returns all of the records from the left table and only the matched records from the right. As a result, some attributes from the right table may be null.
 
 ```sql
 SELECT column_name(s)
@@ -402,7 +402,7 @@ ON table1.column_name = table2.column_name;
 ```
 
 ### RIGHT JOIN
-Also a type of outer join, it returns all of the records from the right table and only matched records from the left. Some attributes from the right table may be null.
+Also a type of outer join, it returns all of the records from the right table and only matched records from the left. Some attributes from the left table may be null.
 
 ```sql
 SELECT column_name(s)
