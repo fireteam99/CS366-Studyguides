@@ -770,16 +770,15 @@ Denormalized data has no restrictions thus making it very ineffecient.
 3. Therefore, move `satisfaction` to it's own table `Satisfaction`.
 
 **Favorite-Brand**
-
-| id | favbrand | brandhq    | rating |
-|----|----------|------------|--------|
-| 1  | Apple    | Cupertino  | 4      |
-| 1  | HP       | Palo Alto  | 5      |
-| 1  | Lenovo   | Quarry Bay | 3      |
-| 2  | Samsung  | Seoul      | 4      |
-| 2  | Dell     | Round Rock | 5      |
-| 3  | Apple    | Cupertino  | 3      |
-| 3  | Samsung  | Seoul      | 5      |
+| id | favbrand | rating |
+|----|----------|--------|
+| 1  | Apple    | 4      |
+| 1  | HP       | 5      |
+| 1  | Lenovo   | 3      |
+| 2  | Samsung  | 4      |
+| 2  | Dell     | 5      |
+| 3  | Apple    | 3      |
+| 3  | Samsung  | 5      |
 
 **Satisfaction**
 
@@ -915,7 +914,7 @@ CREATE TABLE Attend (
 We use the `CHECK` command during attribute declaration to validate a particular attribute.
 
 ```sql
-CREATE TABLE SENIOR (
+CREATE TABLE Senior (
 	id CHAR(5) PRIMARY KEY,
 	age INT CHECK (age > 65),
 );
@@ -932,7 +931,16 @@ CREATE TABLE Student (
 );
 ```
 ##### Assertions: any SQL boolean expression
-Assertions are used for global validation that can span multiple tables unlike checks. Lets say we have three tables Honors_section and Normal_section.
+Assertions are used for global validation that can span multiple tables unlike checks. Lets say we have three tables Honors_section and Normal_section. We want to assert honors sections must have a higher exam average than normal sections.
+
+```sql
+CREATE TABLE Honors_section (
+	sect_id INT PRIMARY KEY AUTO INCREMENT,
+	exam_avg DECIMAL
+);
+CREATE TABLE Normal_section (
+);
+```
 
 ### Triggers
 Stored procedures that execute when a specified condition occurs. Examples include inserting or updating a tuple.
