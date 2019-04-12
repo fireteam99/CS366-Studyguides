@@ -1081,13 +1081,13 @@ Only {1, 3}, {2, 3}, {2, 5}, {3, 5} survive to the next round. This means only i
 | {2, 3, 5} | 2       |
 | {1, 2, 5} | 1       |
 
-The only rule that makes it is {1, 3, 2}.
+The only rule that passes the support level is {1, 3, 2}.
 
 #### Rule Measures: Support and Confidence
 Find all the rules X & Y —> Z
 
 * support, s, is probability that a transaction contains {X, Y, Z}: calculated by `(#times {X, Y, Z} appears) / (#transactions)`
- * based on the previous example, {1, 3, 2} has a support s = 2/4 = .5 = 50%
+ * based on the previous example, {1, 3, 2} has a support `s = 2/4 = 50%`
 * confidence, c, is conditional probability that a transaction having {X, Y} also contains Z: calclated by `(#times {X, Y, Z} appears) / (#times {X, Y} appears)`
- * based on previous example, {1, 3, 2} has a confidence c = 2/2 = 100%
+ * based on previous example, {1, 3} → 2 has a confidence `c = 2/2 = 100%`
 
