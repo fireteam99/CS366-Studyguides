@@ -879,10 +879,11 @@ CREATE TABLE Event (
 	name VARCHAR(20)
 );
 CREATE TABLE Attend (
-	student_id CHAR(20) REFERENCES Student(student_id),
-	event_id CHAR(20) REFERENCES Event(event_id),
+	student_id CHAR(20),
+	event_id CHAR(20),
 	time DATE,
-	PRIMARY KEY(student_id, event_id),
+	PRIMARY KEY(student_id, event_id)
+	FOREIGN KEY (student_id, event_id) REFERENCES (Student(student_id), Event(event_id)
 );
 ```
 We can expect that whenever we insert a Attend tupple, the `student_id` and `event_id` will already exist in the Student and Event tables. Note that the syntax for referencing a composite key is slightly different: `FOREIGN KEY (Key1, Key2) REFERENCES PrimaryTable (Key1, Key2);`
@@ -903,12 +904,14 @@ CREATE TABLE Event (
 	name VARCHAR(20)
 );
 CREATE TABLE Attend (
-	student_id CHAR(20) REFERENCES Student(student_id),
-	event_id CHAR(20) REFERENCES Event(event_id),
+	student_id CHAR(20),
+	event_id CHAR(20),
 	time DATE,
 	PRIMARY KEY(student_id, event_id),
+	FOREIGN KEY (student_id, event_id) REFERENCES (Student(student_id), Event(event_id) ON DELETE CASCADE
 );
 ```
+Here whenever a student or event is updated/deleted, any corresponding record attributes in Attend is also updated/deleted.
 
 ##### Value-based constraints on particular attributes
 We use the `CHECK` command during attribute declaration to validate a particular attribute.
@@ -935,15 +938,62 @@ Assertions are used for global validation that can span multiple tables unlike c
 
 ```sql
 CREATE TABLE Honors_section (
-	sect_id INT PRIMARY KEY AUTO INCREMENT,
-	exam_avg DECIMAL
+	sect_id INT PRIMARY KEY,
+	exam_score DECIMAL,
+	prof_id INT,
+	ta_id INT
 );
 CREATE TABLE Normal_section (
+	sect_id INT PRIMARY KEY,
+	exam_score DECIMAL,
+	prof_id INT,
+	ta_id INT
+);
+
+CREATE ASSERTION HonorsBetter CHECK (
+	(SELECT AVG(exam_score) FROM Honors_section) >
+	(SELECT AVG(exam_score) FROM Normal_section)
 );
 ```
 
+In principle assertions are performed upon every modification to a database. However, a clever system would only run the assertion when neccessary.
+
 ### Triggers
-Stored procedures that execute when a specified condition occurs. Examples include inserting or updating a tuple.
+Stored procedures that execute when a specified condition occurs. Examples include inserting or updating a tuple. They let the user decide when to check any condition. Triggers are also called ECA rules for:
+
+* Event: a database modification like `INSERT` or `UPDATE`
+* Condition: a SQL boolean expression
+* Action: any SQL statements
+
+Lets say we have two tables Prisoner, and Solitary_Confinement. If a prisoner commits more than 3 violations, they are sent to solitary for 10 days.
+
+```sql
+CREATE TABLE Prisoner (
+	id INT PRIMARY KEY,
+	violations INT,
+);
+
+CREATE TABLE Solitary_Confinement (
+	prisoner INT REFERENCES Prisoner(id) PRIMARY KEY,
+	start_date DATE NOT NULL,
+	length INT NOT NULL,
+);
+
+CREATE OR REPLACE TRIGGER PrisonTrig
+	INSTEAD OF UPDATE ON Prisoner
+	DELIMITER $
+	FOR EACH ROW
+	WHEN (NEW.violations > 3)
+	BEGIN
+		INSERT INTO Solitary_Confinement (prisoner, start_date, length) VALUES (NEW.id, GETDATE(), 10);
+		UPDATE Prisoner SET (violations = 0) WHERE (id = NEW.id);
+	END$  
+	DELIMITER ;
+	;
+```
+
+
+
 ### Views
 ### Check
 ### Assertions
