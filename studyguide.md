@@ -965,6 +965,18 @@ Stored procedures that execute when a specified condition occurs. Examples inclu
 * Condition: a SQL boolean expression
 * Action: any SQL statements
 
+#### Bounding
+* The statement `FOR EACH ROW` designates a trigger to be row-level (run only each modified tuple)
+* The absense of `FOR EACH ROW` designates a trigger to be statement-level (run for a single SQL statement regardless how many tuples are modified)
+
+
+#### Referencing
+You can reference the old (to be replaced) tuple using OLD.<attribute name> and the new (the replacement) tuple using NEW.<attribute name>.
+
+#### Action
+If there is more than one SQL statement surround it with BEGIN and END.
+
+#### Example
 Lets say we have two tables Prisoner, and Solitary_Confinement. If a prisoner commits more than 3 violations, they are sent to solitary for 10 days.
 
 ```sql
@@ -989,11 +1001,38 @@ CREATE OR REPLACE TRIGGER PrisonTrig
 		UPDATE Prisoner SET (violations = 0) WHERE (id = NEW.id);
 	END$  
 	DELIMITER ;
-	;
+;
 ```
 
-
-
 ### Views
-### Check
-### Assertions
+A view is a virtual table that is based on the result of a SQL statement. Note that a view always shows up to date data.
+
+```sql
+CREATE TABLE Customer (
+	c_id INT PRIMARY KEY,
+	country CHAR(2) NOT NULL
+);
+
+CREATE OR REPLACE VIEW UK_Customers AS
+SELECT * FROM Customer
+WHERE country = "UK";
+```
+
+## Data Mining
+### Sources of Information
+1. Operation database
+2. Social media
+3. Purchase data
+4. Employees
+
+### Data warehouse
+* Extract: (gather raw information)
+* Transform: (preform operations to make the data more readable)
+* Load: (display the data)
+
+### Data Mining
+* A tool that lets you checkout information from a data warehouse
+* A **Data Mark** is a subset of information from a data warehouse
+
+### Apriori Algorithm
+Start out with number of 
