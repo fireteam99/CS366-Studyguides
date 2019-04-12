@@ -578,15 +578,61 @@ The minimum set of attributes needed to uniquely identify a tuple. Note a candid
 A prime attribute is any attribute that is part of a candidate key. A non-prime attribute is any attribute that doesn't appear in a candidate key.
 
 ### Foreign Dependencies Overview
+* Transitive property where if `A` → `B` and `B` → `C`, means `A` → `C`
+* FDs (Foreign Dependencies) are splittable on the right but not on the left.
+* Lets say we have:
+ * Title, Year → Length
+ * Title, Year → Genre
+ * Title, Year → Studio
+ * This is equivilent to: Title, Year → Length, Genre, Studio
+ * However, we can't do the following:
+ * Title → Length
+ * Year → Length
+ * Title → Genre
+ * Title → Genre
+* All of the attributes on the left are essential inorder to determine the attributes on the right.
 
 ### Closure
+Given a set of FDs name F, it's closure, F+ is all of the FDs that can be inferred from F.
+
+
+**Armstrongs Axioms:**
+
+* *Reflexivity*: If `Y` is a subset of `X`, then `X` → `Y`
+* *Argumentation*: If `X` → `Y`, then `XZ` → `YZ`
+* *Transitivity*: If `X` → `Y` and `Y` → `Z` then `X` → `Z`
+* *Union*: If `A` → `B` and `A` → `C` then `A` → `BC`
+* *Decomposition*: If `A` → `BC` then `A` → `B` and `A` → `C` 
 
 ### Computing Closures of Attributes
+To compute a closure for a set of FDs, run through the list of determination rules and union them into the original set.
+#### Example
 
-### Finding Keys
+```
+Suppose R(A, B, C, D, E)
+FD = {AB → C, B → D, C → E, CE → B, AC → B}
+Compute (AB)+
+
+Trivially, we know (AB)+ must contain {A, B}
+Then we can see that AB → C, so (AB)+ is now {A, B, C}
+Notice C → E, so (AB)+ is now {A, B, C, E}
+See B → D, so (AB)+ is now {A, B, C, D, E}
+At this point we are finished as all of our FDs exist in (AB)+
+```
+### Finding Keys from FDs
+Given R(A, B, C, D, E) with FDs: A → B, BC → E, ED → A
+
+1. Find all the attributes that show up on left hand side: A, B, C, D, E
+2. Find all attributes that show up on left and right hand side: A, B, E
+3. Find attributes that only show up left hand side: C, D
+4. Left hand side attributes form the base. Add other FDs until closure includes all other keys.
+ * (CDA)+ = {C, D, A} + (A → B) = {C, D, A, B} + (BC → E) = {C, D, A, B E}
+ * (CDB)+ = {C, D, B} + (BC → E) = {C, D, B, E} + (ED → A) = {C, D, B, E, A}
+ * (CDE)+ = {C, D, E} + (ED → A) = {C, D, E, A} + (A → B) = {C, D, E, A, B}
+5. We can conclude {C, D, A}, {C, D, B}, and {C, D, E} comprise the possible candidate keys.
 
 ## Normalization
-Normalization refers to the practice of structuring a rdd so that it reduces data redundancy and improves data integrity.
+Normalization refers to the practice of structuring a table so that it reduces data redundancy and improves data integrity.
 ### Data Anomalies
 When a table has too many columns that are non-essential, there runs the risk of many of them being null which leads to problems.
 #### Insert
@@ -798,3 +844,98 @@ To fix it we split our table into one containing `student_id` and `subject` and 
 | P. Coffee | Java    |
 | P. Chash  | C#      |
 
+## Integrety Constraints
+### Constraints
+A relationship among data elements that the DBMS enforces.
+#### Types of Constraints
+##### Keys
+###### Single Attribute
+Place `PRIMARY KEY` or `UNIQUE` after type in declaration of attribute.
+
+```sql
+CREATE TABLE Car (
+	vin CHAR(20) PRIMARY KEY,
+	parkingID CHAR(20) UNIQUE
+);
+```
+###### Multiattribute Key
+Place `PRIMARY KEY (attr1, attr2, ...);` at bottom of table declaration
+
+```sql
+CREATE TABLE Attend (
+	student_id CHAR(20),
+	event_id CHAR(20),
+	PRIMARY KEY(student_id, event_id)
+);
+```
+##### Foreign Keys and Referential Integrety
+Stipulates information in a tuple added to one table must already exist in a referenced table. Given the schemas:
+```sql
+CREATE TABLE Student (
+	student_id CHAR(20) PRIMARY KEY,
+	name VARCHAR(20),
+);
+CREATE TABLE Event (
+	event_id CHAR(20) PRIMARY KEY,
+	name VARCHAR(20)
+);
+CREATE TABLE Attend (
+	student_id CHAR(20) REFERENCES Student(student_id),
+	event_id CHAR(20) REFERENCES Event(event_id),
+	time DATE,
+	PRIMARY KEY(student_id, event_id),
+);
+```
+We can expect that whenever we insert a Attend tupple, the `student_id` and `event_id` will already exist in the Student and Event tables. Note that the syntax for referencing a composite key is slightly different: `FOREIGN KEY (Key1, Key2) REFERENCES PrimaryTable (Key1, Key2);`
+
+###### Actions on Update and Delete
+* DEFAULT (reject modification)
+* CASCADE (makes changes to children)
+* SET NULL (sets the attribute to null)
+Allows you to specify what happens to children when a parent attribute is updated or removed.
+
+```sql
+CREATE TABLE Student (
+	student_id CHAR(20) PRIMARY KEY,
+	name VARCHAR(20),
+);
+CREATE TABLE Event (
+	event_id CHAR(20) PRIMARY KEY,
+	name VARCHAR(20)
+);
+CREATE TABLE Attend (
+	student_id CHAR(20) REFERENCES Student(student_id),
+	event_id CHAR(20) REFERENCES Event(event_id),
+	time DATE,
+	PRIMARY KEY(student_id, event_id),
+);
+```
+
+##### Value-based constraints on particular attributes
+We use the `CHECK` command during attribute declaration to validate a particular attribute.
+
+```sql
+CREATE TABLE SENIOR (
+	id CHAR(5) PRIMARY KEY,
+	age INT CHECK (age > 65),
+);
+```
+##### Tuple-based constraints on several attributes
+If we want to check multiple attributes in relation to each other, we can use check at the bottom of the table decoration.
+
+```sql
+CREATE TABLE Student (
+	id CHAR(5) PRIMARY KEY,
+	start_age INT CHECK (start_age >= 0),
+	end_age INT CHECK (end_age >= 0),
+	CHECK (start_age < end_age)
+);
+```
+##### Assertions: any SQL boolean expression
+Assertions are used for global validation that can span multiple tables unlike checks. Lets say we have three tables Honors_section and Normal_section.
+
+### Triggers
+Stored procedures that execute when a specified condition occurs. Examples include inserting or updating a tuple.
+### Views
+### Check
+### Assertions
