@@ -770,6 +770,7 @@ Denormalized data has no restrictions thus making it very ineffecient.
 3. Therefore, move `satisfaction` to it's own table `Satisfaction`.
 
 **Favorite-Brand**
+
 | id | favbrand | rating |
 |----|----------|--------|
 | 1  | Apple    | 4      |
