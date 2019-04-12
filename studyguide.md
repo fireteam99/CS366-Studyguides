@@ -1040,12 +1040,12 @@ The Apriori Algorithm allows you to determine what items tend to be purchased to
 #### Example
 We are given data detailing what items were bought in several transactions. We want to find all the rules with a minimum suport of 50%. Since there are four transactions, item(s) must appear atleast two times to pass.
 
-| visit | items   |
-|-------|---------|
-| 1     | 1,3,4   |
-| 2     | 2,3,5   |
-| 3     | 1,2,3,5 |
-| 4     | 2,4     |
+| visit | items      |
+|-------|------------|
+| 1     | 1, 3, 4    |
+| 2     | 2, 3, 5    |
+| 3     | 1, 2, 3, 5 |
+| 4     | 2, 4       |
 
 We begin with a set of each item by itself.
 
@@ -1072,7 +1072,7 @@ Every item passes. Next we find the combinations of two items.
 | {3, 5}  | 2       |
 | {4, 5}  | 0       |
 
-Only {1, 3}, {2, 3}, {2, 5}, {3, 5} survive to the next round. This means only items 1, 2, 3, and 5 will exist in the next item sets.
+Only {1, 3}, {2, 3}, {2, 5}, {3, 5} survive to the next round. This means only items 1, 2, 3, and 5 will exist in the next item combination sets.
 
 | itemset   | support |
 |-----------|---------|
