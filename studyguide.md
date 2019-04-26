@@ -70,7 +70,7 @@ blue(ground)?
 ```
 
 ### Rules
-Denoted `<rulename> :- <fact1>, <fact2>...` allow you to construct more facts from existing facts. Rules also end with a period. 
+Denoted `<rulename>(param1, param2...) :- <fact1>, <fact2>...` allow you to construct more facts from existing facts. Rules also end with a period. 
 
 ```prolog
 likes(ryan, brit).
@@ -1006,7 +1006,7 @@ CREATE OR REPLACE TRIGGER PrisonTrig
 ```
 
 ### Views
-A view is a virtual table that is based on the result of a SQL statement. Note that a view always shows up to date data.
+A view is a virtual table that is based on the result of a SQL statement. Note that a view always shows up-to-date data.
 
 ```sql
 CREATE TABLE Customer (
@@ -1030,8 +1030,8 @@ WHERE country = "UK";
 Materialized views of data.
 
 * Extract: (gather raw information)
-* Transform: (preform operations to make the data more readable)
-* Load: (display the data)
+* Transform: (preform operations to make the data more useful)
+* Load: (write data to target database usually a data warehouse)
 
 ### Data Mining
 * A tool that lets you checkout information from a data warehouse
