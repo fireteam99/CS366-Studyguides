@@ -972,7 +972,7 @@ Stored procedures that execute when a specified condition occurs. Examples inclu
 
 
 #### Referencing
-You can reference the old (to be replaced) tuple using OLD.<attribute name> and the new (the replacement) tuple using NEW.<attribute name>.
+You can reference the old (to be replaced) tuple using `OLD.<attribute name>` and the new (the replacement) tuple using `NEW.<attribute name>`.
 
 #### Action
 If there is more than one SQL statement surround it with BEGIN and END.
@@ -1027,6 +1027,8 @@ WHERE country = "UK";
 4. Employees
 
 ### Data warehouse
+Materialized views of data.
+
 * Extract: (gather raw information)
 * Transform: (preform operations to make the data more readable)
 * Load: (display the data)
@@ -1091,4 +1093,152 @@ Find all the rules X & Y —> Z
  * based on the previous example, {1, 3, 2} has a support `s = 2/4 = 50%`
 * confidence, c, is conditional probability that a transaction having {X, Y} also contains Z: calclated by `(#times {X, Y, Z} appears) / (#times {X, Y} appears)`
  * based on previous example, {1, 3} → 2 has a confidence `c = 2/2 = 100%`
+
+## Transactions and Concurrency
+### Motivation
+Databases are accessed by many users at the same time, so its important to prevent unwanted complications of unrestricted concurrency.
+#### Example
+There is a bank account that contains 50 dollars. Two people try to withdraw 30 dollars at the same time. Without transaction controls, the bank account balance will be negative.
+### Transaction
+A process involving database queries and/or modification. Usually comprised of SQL statements.
+### ACID Transactions
+* **Atomic**: Either the whole transaction is completeted or none of it is.
+* **Consistent**: Database constraints must be preserved before, during, and after the transaction.
+* **Isolated**: It appears to the user as if only one process executes at a time.
+* **Durable**: Data in the database must survive a crash.
+
+### Keywords
+* `COMMIT` marks the end of a transaction in SQL.
+* `ROLLBACK` causes an transaction to end by aborting. This means the database will return its original state before the transaction began. 
+ * Errors like dividing by zero or constraint violations may cause an involuntary rollback.
+
+### Interleaving
+Proper interleaving allows databases to handle many users at one time. Without it, shorter transactions would be stuck behind a single long transaction. However, uncontrolled interleaving will cause unexpected side effects.
+
+### Anomalies
+If tasks aren't scheduled correctly, there could be issues when interleaving.
+#### Dirty Reads 
+A dirty read occurs when a transaction reads a database value that has been altered by another - seperate transaction that has not yet be committed.
+##### Example
+Lets say we have `$100` in a bank account A and `$50` in bank account B. The bank decides to add `5%` interest into both accounts. At the same time a user transferes `$20` from account A to account B. Lets say we follow the following schedule:
+
+1. The user views account A.
+2. The user withdraws `$20` from account A.
+3. The bank views account A.
+4. The bank adds `5%` interest to account A so it now contains `$84`.
+5. The bank views account B.
+6. The bank adds `5%` interest to account B so it now contains `$52.5`.
+7. The user views account B.
+8. The user adds `$20` into account B.
+
+At the end of this transaction account A contains `$84` while account B contains `$72.5`. Meanwhile if the two transactions were not interleaved account A would contain `$84` but account B would contain `$73.5`. This is a difference of `$1`!
+
+
+Let the user's transaction be T1 and the bank's transaction be T2.
+
+| T1   | T2   |
+|------|------|
+| R(A) |      |
+| W(A) |      |
+|      | R(A) |
+|      | W(A) |
+|      | R(B) |
+|      | W(B) |
+| R(B) |      |
+| W(B) |      |
+
+#### Unrepeatable Reads
+Unrepeatable reads are the opposite of dirty reads. They happen when a transaction T1 reads a value, another transaction T2 changes the said value, and then T1 tries to read that value again. This is a violation of the isolation property for T1 because it must seem like it is the only transaction executing at once.
+##### Example
+There is a list of values `8, 9, 10` in a column of a database. One user wants to find the minimum and maximum values in that column. Another user is trying to update some of the values. Lets say we follow the following schedule:
+
+1. The first user finds finds the minimum value of the column which is `8`.
+2. The second user removes values `8`, `9`, and `10` then adds the values `5`, `6` and `7`.
+3. The first user finds the maximum value of the column which is `7`.
+
+Somehow the maximum value is less than the minimum value. Notice that T1's reads are interupted bt T2's write.
+
+| T1   | T2   |
+|------|------|
+| R(A) |      |
+|      | R(A) |
+|      | W(A) |
+| R(A) |      |
+ 
+#### Phantoms
+A phantom is a varient of unrepeatble reads where one transaction performs two reads on the same criteria but a row is inserted in between by a seperate transaction, it will seem as if a phantom row suddenly appeared.
+
+### Isolation Levels
+There are four isolation levels defined in SQL but only the "serializable" level is considere ACID complient. Transactions are implemented individually by DBMSs. Note that isolation levels are personal choices. Multiple users accessing the same database could be running on different isolation levels.
+
+Lets say we have the following operations.
+
+1. User 1 finds the max().
+2. User 2 removes a row.
+3. User 2 inserts a row.
+4. User 1 finds the min().
+
+
+#### Serializable
+Serializable is the highest isolation level. Serializable executions are a series of transactions that seem to be happening serially (one by one). In our example, user 1 will either see the database as strictly before user 2 makes modifications or after. Read, write, and range locks are used. No anomalies should occur. The schedule could look something like this.
+
+| T1   | T2   |
+|------|------|
+| R(A) |      |
+| W(A) |      |
+|      | R(A) |
+|      | W(A) |
+|      | W(A) |
+
+
+#### Repeatable Read
+Repeatable read means that write and read locks are enforced but not ranged locks. Phantom reads may occur. If data is read two times within a single read, data seen in the first transaction must be the same in the second read. However, there can be additional tuples in the second read as long as the data seen in the first read is the same. In our example, interleaving would not be allowed becuase user 2 is removing something from the table.
+
+| T1   | T2   |
+|------|------|
+| R(A) |      |
+| W(A) |      |
+|      | R(A) |
+|      | W(A) |
+|      | W(A) |
+
+#### Read Committed
+Read committed simply means that write locks are activated but nothing else. This means that phantom reads and nonrepeatable reads may occur. In interleaving is now allowed because theres nothing stopping a full write transaction between reads.
+
+| T1   | T2   |
+|------|------|
+| R(A) |      |
+|      | R(A) |
+|      | W(A) |
+|      | W(A) |
+| R(A) |      |
+
+#### Read Uncommitted
+Read uncommitted has no locks so all of the anomalies may occur. This means that its possible that user 1 view the table right after user 2 removes a row. That means uncommited data that may or may not actually be entered into the database can be read.
+
+| T1   | T2   |
+|------|------|
+|      | R(A) |
+|      | W(A) |
+| R(A) |      |
+|      | W(A) |
+| R(A) |      |
+
+#### Isolation levels vs read phenomena
+
+| Isolation level  | Dirty reads | Lost updates | Non-repeatable reads | Phantoms    |
+|------------------|-------------|--------------|----------------------|-------------|
+| Read Uncommitted | may occur   | may occur    | may occur            | may occur   |
+| Read Committed   | don't occur | may occur    | may occur            | may occur   |
+| Repeatable Read  | don't occur | don't occur  | don't occur          | may occur   |
+| Serializable     | don't occur | don't occur  | don't occur          | don't occur |
+
+## Indexing
+You can index something in a database to make retrieval faster. However, it makes writes, updates, and deletes more expensive because you have to also change the index. Good for situations where you have to do alot of reads.
+
+## Semi-structured Data
+Examples:
+
+ * XML
+ * EDI
 
