@@ -124,6 +124,7 @@ Example: Given the following table named People,
 | Jim  | 30  |
 | Joe  | 20  |
 | Josh | 45  |
+
 **Select everyone older than 25.**  
 σ<sub>age > 25</sub>
  
