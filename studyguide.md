@@ -1248,12 +1248,14 @@ Read uncommitted has no locks so all of the anomalies may occur. This means that
 #### Shared Locks (Read Locks)
 Issued when one or many transactions attempt to read a value. Prevents other transactions from requesting a write lock for the said value, but allows them to request shared locks. Called a shared lock because multiple transactions can have shared locks on the same value at the same time.
 #### Exclusive Locks (Write Locks)
-Gives a transaction exclusive access for writing to a value. When a write lock is in place no other value can lock that particular value.
+Gives a transaction exclusive access for writing to a value. When a write lock is in place, no other transaction can lock that particular value.
 
 #### Two Phase Locking (2PL)
-A transaction in compliance with 2PL will only release its exclusive (write) locks after it has been committed or aborted but can release it's read locks 
+A transaction in compliance with 2PL has two phases: Expanding Phase where locks are acquired and no locks are released and the Shrinking Phase where locks are released and no locks are acquired. will only release its exclusive (write) locks after it has been committed or aborted but can release it's read locks during phase two (shrinking/contracting).
 #### Strict Two Phase Locking (S2PL)
-S2PL does not release any locks until the commit point at which it will release all of it's locks at the same time.
+A S2PL compliant transaction is only allowed to release write locks after it has ended (commit/abort). Shared locks are still allowed to be released during phase 2. 
+#### Strong Strict Two Phase Locking (SS2PL)
+A SS2PL compliant transaction does not release any locks until the commit point at which it will release all of it's locks at the same time.
 
 ## Database Performance
 ### Indexing
