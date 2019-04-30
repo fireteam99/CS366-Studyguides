@@ -604,6 +604,7 @@ Given a set of FDs name F, it's closure, F+ is all of the FDs that can be inferr
 * *Transitivity*: If `X` → `Y` and `Y` → `Z` then `X` → `Z`
 * *Union*: If `A` → `B` and `A` → `C` then `A` → `BC`
 * *Decomposition*: If `A` → `BC` then `A` → `B` and `A` → `C` 
+* *Composition*: IF `X` → `Y` and `A` → `B` then `XA` → `YB`
 
 ### Computing Closures of Attributes
 To compute a closure for a set of FDs, run through the list of determination rules and union them into the original set.
@@ -1036,7 +1037,12 @@ Materialized views of data.
 
 ### Data Mining
 * A tool that lets you checkout information from a data warehouse
-* A **Data Mark** is a subset of information from a data warehouse
+* A **Data Mart** is a subset of information from a data warehouse
+
+### RFM Analysis
+* Recent: when did the visit occur?
+* Frequent: how many times did the customer visit?
+* Money: how much did the customer spend?
 
 ### Apriori Algorithm
 The Apriori Algorithm allows you to determine what items tend to be purchased together.
@@ -1118,7 +1124,7 @@ Proper interleaving allows databases to handle many users at one time. Without i
 
 ### Anomalies
 If tasks aren't scheduled correctly, there could be issues when interleaving.
-#### Dirty Reads 
+#### Dirty Reads (Write-Read Conflict)
 A dirty read occurs when a transaction reads a database value that has been altered by another - seperate transaction that has not yet be committed.
 ##### Example
 Lets say we have `$100` in a bank account A and `$50` in bank account B. The bank decides to add `5%` interest into both accounts. At the same time a user transferes `$20` from account A to account B. Lets say we follow the following schedule:
@@ -1148,7 +1154,7 @@ Let the user's transaction be T1 and the bank's transaction be T2.
 | R(B) |      |
 | W(B) |      |
 
-#### Unrepeatable Reads
+#### Unrepeatable Reads (Read-Write Conflict)
 Unrepeatable reads are the opposite of dirty reads. They happen when a transaction T1 reads a value, another transaction T2 changes the said value, and then T1 tries to read that value again. This is a violation of the isolation property for T1 because it must seem like it is the only transaction executing at once.
 ##### Example
 There is a list of values `8, 9, 10` in a column of a database. One user wants to find the minimum and maximum values in that column. Another user is trying to update some of the values. Lets say we follow the following schedule:
@@ -1168,6 +1174,9 @@ Somehow the maximum value is less than the minimum value. Notice that T1's reads
  
 #### Phantoms
 A phantom is a varient of unrepeatble reads where one transaction performs two reads on the same criteria but a row is inserted in between by a seperate transaction, it will seem as if a phantom row suddenly appeared.
+
+#### Overwriting Uncommitted Data (Write-Write Conflict)
+This happens when two transactions write to the same data at the same time. Usually happens due to **blind writes** - writing to a value without reading it.
 
 ### Isolation Levels
 There are four isolation levels defined in SQL but only the "serializable" level is considere ACID complient. Transactions are implemented individually by DBMSs. Note that isolation levels are personal choices. Multiple users accessing the same database could be running on different isolation levels.
@@ -1234,12 +1243,161 @@ Read uncommitted has no locks so all of the anomalies may occur. This means that
 | Repeatable Read  | don't occur | don't occur  | don't occur          | may occur   |
 | Serializable     | don't occur | don't occur  | don't occur          | don't occur |
 
-## Indexing
-You can index something in a database to make retrieval faster. However, it makes writes, updates, and deletes more expensive because you have to also change the index. Good for situations where you have to do alot of reads.
+
+### Locks
+#### Shared Locks (Read Locks)
+Issued when one or many transactions attempt to read a value. Prevents other transactions from requesting a write lock for the said value, but allows them to request shared locks. Called a shared lock because multiple transactions can have shared locks on the same value at the same time.
+#### Exclusive Locks (Write Locks)
+Gives a transaction exclusive access for writing to a value. When a write lock is in place no other value can lock that particular value.
+
+#### Two Phase Locking (2PL)
+A transaction in compliance with 2PL will only release its exclusive (write) locks after it has been committed or aborted but can release it's read locks 
+#### Strict Two Phase Locking (S2PL)
+S2PL does not release any locks until the commit point at which it will release all of it's locks at the same time.
+
+## Database Performance
+### Indexing
+Indexing in database allows you to preform lookups faster through modifications of how data is stored internally. Indexed fields have a look up of `O(1)` or `O(log(n)`depending on the inpmementation compared to  a full table scan which takes `O(n)`. Keys such as a unique identifier are generally indexed as they are not likely to changed and used to find a resource.
+#### Pros
+* Allows for much faster lookup.
+#### Cons
+* Indexes are fully redundant.
+* Updates, inserts, and deletes on the original resource also applies to the index.
+* There is an overhead from maintaining indexes.
+### Denormalization
+In some specific circumstances we want to leave our data denormalized.
+#### Pro/Cons Normalized
+* Pro: Less redundancy - less storage needed
+* Pro: Avoids insert, update, delete anomalies
+* Con: Takes longer to perform look ups because of joins
+* Con: More complicated queries needed
+#### Pro/Cons Denormalized 
+* Pro: Faster look ups, by avoiding joins
+* Pro: Queries are simpler to write
+* Pro: Reduction in number of tables
+* Pro: Aggregate values can be computed
+* Con: More redundancy
+* Con: Increased chance of data anomalies (insert, update, delete)
 
 ## Semi-structured Data
-Examples:
+### Characteristics
+* Fields may be missing.
+* Fields may be nested.
+* Fields may be heterogenous.
+* Fields may be repeated
+* Collections may be heterogeneous.1.
 
- * XML
- * EDI
 
+### XML
+Stands for "Extensible Markup Language". XML doesn't do anything on it's own but is simply a way to exchange data.
+#### Namespaces
+Namespaces allow you to share tags and attributes via a external DTD.
+
+Can be done using `<"name" :"localtag>"= "uri">`
+
+```xml
+<book xmlns:isbn=“www.isbn-org.org/def”>
+</book>
+```
+
+Or using `<"prefix":"tag">`
+
+```xml
+<car>
+	<size>15</size>
+	<wheel:size>...<wheel>
+</car>
+```
+#### Terminology
+* Tags can be any arbitrary name: "book", "author", "name"...
+* Start tags wrapped in chevrons: `<book>`
+* End tags have an additional slash: `</book>`
+* Elements contain openeing and closing tags: `<book>...</book>`
+* Elements are nested and bottom out at data values which forms a tree.
+* Empty elements can be shortened: `<book></book>` = `<book/>`
+* An XML documents must be a single element
+* Well formed XML documents are properly nested with matching tags
+
+#### Attributes
+* An alternative way to represent data
+* At most one occurence of attribute per element
+* Attribute value is a single string
+* Multiple attributes are seperated by a space or tab
+* Useful for metadata
+
+```xml
+<book status="checked out">
+	<author well-known="true">
+		Bill
+	</author>
+	<title>
+		Random Book
+	</title>
+	<price currency="USD">
+		120
+	</price>
+</book>
+```
+
+#### XML Tree
+The following code would produce the following tree.
+
+```xml
+<bookstore>
+	<book category="fiction">
+		<title lang="eng">
+			Everyday Italian
+		</title>
+		<author>
+			Giada De Laurentiis
+		</author>
+		<year>
+			2005
+		</year>
+		<price>
+			30.00
+		</price>
+	</book>
+</bookstore>
+```
+![xml tree](https://www.w3schools.com/xml/nodetree.gif)
+*Image credit goes to W3-Schools*
+
+**Notice that the child nodes in the tree are ordered.**
+
+#### Document Type Definition (DTD)
+* A schema/grammar for XML data.
+* Describes what elements and attributes are required or optional.
+
+##### !ELEMENT
+`!ELEMENT` declares an element name and what kind of children it can have
+
+Can contain:
+
+* Other Elements
+* `#PCDATA` (parsed character type)
+
+The element contains a regular expression which describes what elements are allowed.
+
+* An ordered list of regular expressions `exp1, exp2...`
+* An optional expression with zero or more occurrences `exp*`
+* An expression with one or more occurences `exp+`
+* An optional expression with zero or one occurrence `exp?`
+* A set of alternative expressions `exp1 | exp2...`
+
+Example: `<!ELEMENT BOAT (Size?, Weight?, Speed?)>`
+
+##### !ATTLIST
+Defines a list of attributes for an element which can be required or not, and can have default values.
+
+Example: `<!ATTLIST Price, currency, interest... >`
+
+### JSON
+Stands for "Javascript Object Notation".
+
+Built upon:
+
+* Base values: numbers, strings
+* Objects {}: sets of label-value pairs where labels are usually strings
+* Arrays[]: list of values indexed from 1
+* Arbitrary nesting
